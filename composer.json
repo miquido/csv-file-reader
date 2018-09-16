@@ -4,7 +4,7 @@
     "type": "library",
     "require": {
         "php": "^7.2",
-        "miquido/observable": "dev-develop",
+        "miquido/observable": "dev-master",
         "webmozart/assert": "^1.3"
     },
     "require-dev": {
