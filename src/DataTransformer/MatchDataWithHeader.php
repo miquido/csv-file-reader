@@ -54,14 +54,6 @@ final class MatchDataWithHeader
         }
 
         foreach ($this->header as $colNumber => $colName) {
-            if (!isset($data[$colNumber])) {
-                throw new InvalidCsvLineException(
-                    \sprintf('Array does not have index %s (column: %s), line number: %s', $colNumber, $colName, $lineNumber),
-                    $data,
-                    $lineNumber
-                );
-            }
-
             $result[$colName] = $data[$colNumber];
         }
 

@@ -16,5 +16,5 @@ interface ObservableFileInterface extends \Countable
 
     public function errors(): ObservableInterface;
 
-    public function loop(int $skipLines = 0): void;
+    public function loop(): void;
 }

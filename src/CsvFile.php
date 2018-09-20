@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Miquido\CsvFileReader;
 
 use Miquido\CsvFileReader\DataTransformer\MatchDataWithHeader;
-use Miquido\CsvFileReader\Exception\InvalidCsvHeaderException;
 use Miquido\CsvFileReader\Exception\InvalidCsvLineException;
 use Miquido\CsvFileReader\Line\CsvLine;
 use SplFileObject as FileObject;
+use Webmozart\Assert\Assert;
 
 final class CsvFile
 {
@@ -49,9 +49,19 @@ final class CsvFile
         $this->invalidLineHandler = $handler;
     }
 
+    public function hasInvalidLineHandler(): bool
+    {
+        return \is_callable($this->invalidLineHandler);
+    }
+
     public function setDataTransformer(callable $transformer = null): void
     {
         $this->dataTransformer = $transformer;
+    }
+
+    public function hasDataTransformer(): bool
+    {
+        return \is_callable($this->dataTransformer);
     }
 
     /**
@@ -90,32 +100,26 @@ final class CsvFile
     }
 
     /**
-     * @throws \RuntimeException
-     * @throws \LogicException
+     * @throws InvalidCsvLineException
      *
      * @return int
      */
     public function count(): int
     {
-        // not the most efficient way, but we need to have the same result as getData()
-        $file = $this->openFile();
-        $count = 0;
-        while (!$file->eof()) {
-            $data = $file->fgetcsv();
-            if (!\is_array($data)) {
-                continue; // skip empty lines or last enter
-            }
+        $file = new self($this->filePath, $this->firstLineHeader, $this->csvControl);
+        $file->setDataTransformer($this->dataTransformer);
+        $file->setInvalidLineHandler(function (): void {});
 
+        // not the most efficient way, but we need to have the same result as getData()
+        $count = 0;
+        foreach ($file->getData() as $line) {
             ++$count;
         }
 
-        $file = null; // close file
-
-        return $this->firstLineHeader ? $count - 1 : $count;
+        return $count;
     }
 
     /**
-     * @throws InvalidCsvHeaderException
      * @throws InvalidCsvLineException
      *
      * @return iterable
@@ -127,10 +131,8 @@ final class CsvFile
         $dataProxy = null;
         if ($this->firstLineHeader) {
             $header = $file->fgetcsv();
-            if (!\is_array($header)) {
-                throw new InvalidCsvHeaderException('Invalid header of the file');
-            }
-            $dataProxy = new MatchDataWithHeader($header);
+            Assert::isArray($header);
+            $dataProxy = new MatchDataWithHeader((array) $header); // make phpstan happy
         }
 
         $lineNumber = 0;
@@ -141,8 +143,9 @@ final class CsvFile
             }
 
             try {
+                ++$lineNumber;
                 yield new CsvLine(
-                    ++$lineNumber,
+                    $lineNumber,
                     $this->transformData(
                         $dataProxy ? $dataProxy->match($data, $lineNumber) : $data,
                         $lineNumber

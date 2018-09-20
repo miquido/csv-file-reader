@@ -24,6 +24,12 @@ class CsvFileReader implements ObservableFileInterface
 
     public function __construct(CsvFile $file, callable $dataTransformer = null)
     {
+        if ($file->hasInvalidLineHandler()) {
+            throw new \InvalidArgumentException('CsvFile already has invalid line handler');
+        }
+        if ($file->hasDataTransformer()) {
+            throw new \InvalidArgumentException('CsvFile already has data transformer');
+        }
         $this->file = $file;
         $this->subject = new Subject();
         $this->file->setInvalidLineHandler(function (InvalidCsvLineException $e): void {
@@ -33,28 +39,19 @@ class CsvFileReader implements ObservableFileInterface
     }
 
     /**
-     * @param int $skipLines
-     *
-     * @throws Exception\InvalidCsvHeaderException
      * @throws InvalidCsvLineException
      */
-    public function loop(int $skipLines = 0): void
+    public function loop(): void
     {
-        $skipped = 0;
         foreach ($this->file->getData() as $csvLine) {
-            if ($skipLines > 0 && $skipped < $skipLines) {
-                ++$skipped;
-            } else {
-                $this->subject->next($csvLine);
-            }
+            $this->subject->next($csvLine);
         }
 
         $this->subject->complete();
     }
 
     /**
-     * @throws \RuntimeException
-     * @throws \LogicException
+     * @throws InvalidCsvLineException
      *
      * @return int
      */
