@@ -7,5 +7,6 @@ namespace Miquido\CsvFileReader\Line;
 interface CsvLineInterface
 {
     public function getLineNumber(): int;
+
     public function getData();
 }

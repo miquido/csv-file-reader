@@ -1,0 +1,5 @@
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+parameters:
+    ignoreErrors:
+        # Put false positives here

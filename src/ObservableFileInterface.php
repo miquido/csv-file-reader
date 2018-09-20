@@ -9,8 +9,11 @@ use Miquido\Observable\ObservableInterface;
 interface ObservableFileInterface extends \Countable
 {
     public function stream(): ObservableInterface;
+
     public function lines(): ObservableInterface;
+
     public function data(): ObservableInterface;
+
     public function errors(): ObservableInterface;
 
     public function loop(int $skipLines = 0): void;

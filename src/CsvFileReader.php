@@ -34,6 +34,7 @@ class CsvFileReader implements ObservableFileInterface
 
     /**
      * @param int $skipLines
+     *
      * @throws Exception\InvalidCsvHeaderException
      * @throws InvalidCsvLineException
      */
@@ -52,9 +53,10 @@ class CsvFileReader implements ObservableFileInterface
     }
 
     /**
-     * @return int
      * @throws \RuntimeException
      * @throws \LogicException
+     *
+     * @return int
      */
     public function count(): int
     {

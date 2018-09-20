@@ -7,12 +7,12 @@ namespace Miquido\CsvFileReader\Exception;
 final class InvalidCsvLineException extends CsvFileReaderException
 {
     /**
-     * @var array 
+     * @var array
      */
     private $data;
 
     /**
-     * @var int 
+     * @var int
      */
     private $lineNumber;
 

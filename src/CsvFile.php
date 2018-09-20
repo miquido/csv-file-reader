@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Miquido\CsvFileReader;
 
-use Miquido\CsvFileReader\Exception\InvalidCsvLineException;
-use Miquido\CsvFileReader\Exception\InvalidCsvHeaderException;
 use Miquido\CsvFileReader\DataTransformer\MatchDataWithHeader;
+use Miquido\CsvFileReader\Exception\InvalidCsvHeaderException;
+use Miquido\CsvFileReader\Exception\InvalidCsvLineException;
 use Miquido\CsvFileReader\Line\CsvLine;
-use \SplFileObject as FileObject;
-
+use SplFileObject as FileObject;
 
 final class CsvFile
 {
@@ -24,7 +23,7 @@ final class CsvFile
     private $firstLineHeader;
 
     /**
-     * @var CsvControl
+     * @var CsvControl|null
      */
     private $csvControl;
 
@@ -57,6 +56,7 @@ final class CsvFile
 
     /**
      * @param InvalidCsvLineException $e
+     *
      * @throws InvalidCsvLineException
      */
     private function handleInvalidLineException(InvalidCsvLineException $e): void
@@ -70,17 +70,18 @@ final class CsvFile
 
     /**
      * @param array $data
-     * @param int $lineNumber
-     * @return array|mixed
+     * @param int   $lineNumber
+     *
      * @throws InvalidCsvLineException
+     *
+     * @return array|mixed
      */
     private function transformData(array $data, int $lineNumber)
     {
         if (\is_callable($this->dataTransformer)) {
             try {
                 return \call_user_func($this->dataTransformer, $data, $lineNumber);
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 throw new InvalidCsvLineException($e->getMessage(), $data, $lineNumber);
             }
         }
@@ -89,9 +90,10 @@ final class CsvFile
     }
 
     /**
-     * @return int
      * @throws \RuntimeException
      * @throws \LogicException
+     *
+     * @return int
      */
     public function count(): int
     {
@@ -113,9 +115,10 @@ final class CsvFile
     }
 
     /**
-     * @return iterable
      * @throws InvalidCsvHeaderException
      * @throws InvalidCsvLineException
+     *
+     * @return iterable
      */
     public function getData(): iterable
     {
@@ -145,8 +148,7 @@ final class CsvFile
                         $lineNumber
                     )
                 );
-            }
-            catch (InvalidCsvLineException $e) {
+            } catch (InvalidCsvLineException $e) {
                 $this->handleInvalidLineException($e);
             }
         }
@@ -155,9 +157,10 @@ final class CsvFile
     }
 
     /**
-     * @return FileObject
      * @throws \RuntimeException
      * @throws \LogicException
+     *
+     * @return FileObject
      */
     private function openFile(): FileObject
     {

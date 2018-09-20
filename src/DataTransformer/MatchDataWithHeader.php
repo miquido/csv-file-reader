@@ -21,6 +21,7 @@ final class MatchDataWithHeader
 
     /**
      * MatchDataWithHeader constructor.
+     *
      * @param array $header
      */
     public function __construct(array $header)
@@ -34,9 +35,11 @@ final class MatchDataWithHeader
 
     /**
      * @param array $data
-     * @param int $lineNumber
-     * @return array
+     * @param int   $lineNumber
+     *
      * @throws InvalidCsvLineException
+     *
+     * @return array
      */
     public function match(array $data, int $lineNumber): array
     {
@@ -44,7 +47,7 @@ final class MatchDataWithHeader
 
         if (\count($data) !== $this->count) {
             throw new InvalidCsvLineException(
-                sprintf('Data row has different length than a header (%s vs %s), line number: %s', \count($data), $this->count, $lineNumber),
+                \sprintf('Data row has different length than a header (%s vs %s), line number: %s', \count($data), $this->count, $lineNumber),
                 $data,
                 $lineNumber
             );
@@ -53,7 +56,7 @@ final class MatchDataWithHeader
         foreach ($this->header as $colNumber => $colName) {
             if (!isset($data[$colNumber])) {
                 throw new InvalidCsvLineException(
-                    sprintf('Array does not have index %s (column: %s), line number: %s', $colNumber, $colName, $lineNumber),
+                    \sprintf('Array does not have index %s (column: %s), line number: %s', $colNumber, $colName, $lineNumber),
                     $data,
                     $lineNumber
                 );
