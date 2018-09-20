@@ -71,11 +71,10 @@ final class CsvFile
      */
     private function handleInvalidLineException(InvalidCsvLineException $e): void
     {
-        if (\is_callable($this->invalidLineHandler)) {
-            \call_user_func($this->invalidLineHandler, $e);
-        } else {
+        if (!\is_callable($this->invalidLineHandler)) {
             throw $e;
         }
+        \call_user_func($this->invalidLineHandler, $e);
     }
 
     /**
@@ -108,7 +107,8 @@ final class CsvFile
     {
         $file = new self($this->filePath, $this->firstLineHeader, $this->csvControl);
         $file->setDataTransformer($this->dataTransformer);
-        $file->setInvalidLineHandler(function (): void {});
+        $file->setInvalidLineHandler(function (): void {
+        });
 
         // not the most efficient way, but we need to have the same result as getData()
         $count = 0;
