@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Miquido\CsvFileReader;
 
 use Miquido\CsvFileReader\DataTransformer\MatchDataWithHeader;
+use Miquido\CsvFileReader\Exception\InvalidCsvLineException;
 use Miquido\CsvFileReader\Line\CsvLine;
 use Miquido\CsvFileReader\Line\CsvLineInterface;
 use SplFileObject as FileObject;
@@ -27,11 +28,38 @@ final class CsvFile
      */
     private $csvControl;
 
+    /**
+     * @var callable|null
+     */
+    private $invalidLineHandler;
+
     public function __construct(string $filePath, bool $firstLineHeader = true, CsvControl $csvControl = null)
     {
         $this->filePath = $filePath;
         $this->firstLineHeader = $firstLineHeader;
         $this->csvControl = $csvControl;
+    }
+
+    public function setInvalidLineHandler(callable $callback): void
+    {
+        $this->invalidLineHandler = $callback;
+    }
+
+    public function hasInvalidLineHandler(): bool
+    {
+        return \is_callable($this->invalidLineHandler);
+    }
+
+    /**
+     * @param InvalidCsvLineException $e
+     * @throws InvalidCsvLineException
+     */
+    private function handleInvalidLineException(InvalidCsvLineException $e): void
+    {
+        if (!\is_callable($this->invalidLineHandler)) {
+            throw $e;
+        }
+        \call_user_func($this->invalidLineHandler, $e);
     }
 
     /**
@@ -51,6 +79,7 @@ final class CsvFile
 
     /**
      * @return iterable|CsvLineInterface[]
+     * @throws InvalidCsvLineException
      */
     public function readLines(): iterable
     {
@@ -70,10 +99,15 @@ final class CsvFile
             ++$lineNumber;
             $data = (array) $file->fgetcsv();
 
-            yield new CsvLine(
-                $lineNumber,
-                $dataProxy ? $dataProxy->match($data, $lineNumber) : $data
-            );
+            try {
+                yield new CsvLine(
+                    $lineNumber,
+                    $dataProxy ? $dataProxy->match($data, $lineNumber) : $data
+                );
+            }
+            catch (InvalidCsvLineException $e) {
+                $this->handleInvalidLineException($e);
+            }
         }
 
         $file = null; // close file

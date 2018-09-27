@@ -33,6 +33,12 @@ class CsvFileReader implements ObservableFileInterface
         $this->subject = new Subject();
         $this->file = $file;
         $this->dataTransformer = $dataTransformer;
+        if ($file->hasInvalidLineHandler()) {
+            throw new \InvalidArgumentException('CsvFile already has invalid line handler');
+        }
+        $this->file->setInvalidLineHandler(function (InvalidCsvLineException $e): void {
+            $this->subject->next($e);
+        });
     }
 
     public function loop(): void

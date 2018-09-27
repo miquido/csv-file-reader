@@ -6,6 +6,7 @@ namespace Miquido\CsvFileReader\Tests;
 
 use Miquido\CsvFileReader\CsvControl;
 use Miquido\CsvFileReader\CsvFile;
+use Miquido\CsvFileReader\Exception\InvalidCsvLineException;
 use Miquido\CsvFileReader\Line\CsvLineInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -73,4 +74,21 @@ CSV;
         $this->assertSame('age', $secondItem->getData()[1]);
         $this->assertSame('55', $secondItem->getData()[2]);
     }
+
+    public function testCsvFile_WithInvalidLines(): void
+    {
+        $csv = <<<CSV
+name,surname,email
+John,"Smith",john@smith.com,extra
+Jan,Kowalski,"jan@kowaslki.pl"
+CSV;
+
+        $file = new CsvFile('data://text/plain,'.\urlencode($csv));
+
+        $this->expectException(InvalidCsvLineException::class);
+        $this->expectExceptionMessage('Data row has more data than a header (4 in a data, 3 in a header), line number: 2');
+        \iterator_to_array($file->readLines());
+    }
+
+
 }
