@@ -4,23 +4,19 @@ declare(strict_types=1);
 
 namespace Miquido\CsvFileReader\Exception;
 
+use Miquido\CsvFileReader\Line\CsvLineInterface;
+
 final class InvalidCsvLineException extends CsvFileReaderException
 {
     /**
-     * @var array
+     * @var CsvLineInterface
      */
-    private $data;
+    private $csvLine;
 
-    /**
-     * @var int
-     */
-    private $lineNumber;
-
-    public function __construct(string $message, array $data, int $lineNumber, \Exception $previous = null)
+    public function __construct(string $message, CsvLineInterface $csvLine, \Exception $previous = null)
     {
         parent::__construct($message, 0, $previous);
-        $this->data = $data;
-        $this->lineNumber = $lineNumber;
+        $this->csvLine = $csvLine;
     }
 
     /**
@@ -28,7 +24,7 @@ final class InvalidCsvLineException extends CsvFileReaderException
      */
     public function getData(): array
     {
-        return $this->data;
+        return $this->csvLine->getData();
     }
 
     /**
@@ -36,6 +32,11 @@ final class InvalidCsvLineException extends CsvFileReaderException
      */
     public function getLineNumber(): int
     {
-        return $this->lineNumber;
+        return $this->csvLine->getLineNumber();
+    }
+
+    public function getCsvLine(): CsvLineInterface
+    {
+        return $this->csvLine;
     }
 }

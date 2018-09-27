@@ -6,7 +6,7 @@ namespace Miquido\CsvFileReader;
 
 use Miquido\Observable\ObservableInterface;
 
-interface ObservableFileInterface extends \Countable
+interface ObservableFileInterface
 {
     public function stream(): ObservableInterface;
 

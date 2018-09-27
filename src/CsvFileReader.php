@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Miquido\CsvFileReader;
 
 use Miquido\CsvFileReader\Exception\InvalidCsvLineException;
+use Miquido\CsvFileReader\Line\CsvLine;
 use Miquido\CsvFileReader\Line\CsvLineInterface;
 use Miquido\Observable\ObservableInterface;
 use Miquido\Observable\Operator;
@@ -22,42 +23,52 @@ class CsvFileReader implements ObservableFileInterface
      */
     private $subject;
 
+    /**
+     * @var callable|null
+     */
+    private $dataTransformer;
+
     public function __construct(CsvFile $file, callable $dataTransformer = null)
     {
-        if ($file->hasInvalidLineHandler()) {
-            throw new \InvalidArgumentException('CsvFile already has invalid line handler');
-        }
-        if ($file->hasDataTransformer()) {
-            throw new \InvalidArgumentException('CsvFile already has data transformer');
-        }
-        $this->file = $file;
         $this->subject = new Subject();
-        $this->file->setInvalidLineHandler(function (InvalidCsvLineException $e): void {
-            $this->subject->next($e);
-        });
-        $this->file->setDataTransformer($dataTransformer);
+        $this->file = $file;
+        $this->dataTransformer = $dataTransformer;
     }
 
-    /**
-     * @throws InvalidCsvLineException
-     */
     public function loop(): void
     {
-        foreach ($this->file->getData() as $csvLine) {
-            $this->subject->next($csvLine);
+        foreach ($this->file->readLines() as $csvLine) {
+            try {
+                $this->subject->next($this->transformLine($csvLine));
+            } catch (InvalidCsvLineException $e) {
+                $this->subject->next($e);
+            }
         }
 
         $this->subject->complete();
     }
 
     /**
+     * @param CsvLineInterface $line
+     *
      * @throws InvalidCsvLineException
      *
-     * @return int
+     * @return CsvLineInterface
      */
-    public function count(): int
+    private function transformLine(CsvLineInterface $line): CsvLineInterface
     {
-        return $this->file->count();
+        if (\is_callable($this->dataTransformer)) {
+            try {
+                return new CsvLine(
+                    $line->getLineNumber(),
+                    \call_user_func($this->dataTransformer, $line->getData(), $line->getLineNumber())
+                );
+            } catch (\Exception $e) {
+                throw new InvalidCsvLineException($e->getMessage(), $line, $e);
+            }
+        }
+
+        return $line;
     }
 
     public function lines(): ObservableInterface
