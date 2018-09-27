@@ -41,6 +41,11 @@ class CsvFileReader implements ObservableFileInterface
         });
     }
 
+    public function countLines(): int
+    {
+        return $this->file->countLines();
+    }
+
     public function loop(): void
     {
         foreach ($this->file->readLines() as $csvLine) {

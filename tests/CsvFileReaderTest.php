@@ -48,7 +48,7 @@ CSV;
         $reader->errors()->subscribe($errorsObserver);
         $reader->stream()->subscribe($streamObserver);
 
-        $this->assertSame(4, $file->countLines());
+        $this->assertSame(4, $reader->countLines());
 
         $reader->loop();
     }
@@ -83,7 +83,7 @@ CSV;
 
         $reader->loop();
 
-        $this->assertSame(5, $file->countLines());
+        $this->assertSame(5, $reader->countLines());
     }
 
     public function testCsvFileReaderConstructor_HasInvalidLineHandler(): void

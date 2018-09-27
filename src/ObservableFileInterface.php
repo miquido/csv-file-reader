@@ -17,4 +17,6 @@ interface ObservableFileInterface
     public function errors(): ObservableInterface;
 
     public function loop(): void;
+
+    public function countLines(): int;
 }
