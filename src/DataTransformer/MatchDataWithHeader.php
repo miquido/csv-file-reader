@@ -37,10 +37,11 @@ final class MatchDataWithHeader
 
     /**
      * @param array $data
-     * @param int $lineNumber
+     * @param int   $lineNumber
+     *
+     * @throws InvalidCsvLineException
      *
      * @return array
-     * @throws InvalidCsvLineException
      */
     public function match($data, int $lineNumber): array
     {
