@@ -48,7 +48,6 @@ CSV;
         $csv = <<<CSV
 1;'test';'some value'
 2;age;55
-
 CSV;
         $file = new CsvFile('data://text/plain,'.\urlencode($csv), false, new CsvControl(';', "'"));
         $data = $file->readLines();
