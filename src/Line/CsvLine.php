@@ -17,7 +17,7 @@ final class CsvLine implements CsvLineInterface
     private $data;
 
     /**
-     * @param int $lineNumber
+     * @param int   $lineNumber
      * @param mixed $data
      */
     public function __construct(int $lineNumber, $data)

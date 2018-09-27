@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Miquido\CsvFileReader;
 
-use Miquido\CsvFileReader\Exception\InvalidCsvLineException;
-use Miquido\CsvFileReader\Exception\InvalidCsvHeaderException;
 use Miquido\CsvFileReader\DataTransformer\MatchDataWithHeader;
 use Miquido\CsvFileReader\Line\CsvLine;
-use \SplFileObject as FileObject;
-
+use Miquido\CsvFileReader\Line\CsvLineInterface;
+use SplFileObject as FileObject;
+use Webmozart\Assert\Assert;
 
 final class CsvFile
 {
@@ -24,19 +23,9 @@ final class CsvFile
     private $firstLineHeader;
 
     /**
-     * @var CsvControl
+     * @var CsvControl|null
      */
     private $csvControl;
-
-    /**
-     * @var callable|null
-     */
-    private $invalidLineHandler;
-
-    /**
-     * @var callable|null
-     */
-    private $dataTransformer;
 
     public function __construct(string $filePath, bool $firstLineHeader = true, CsvControl $csvControl = null)
     {
@@ -45,124 +34,61 @@ final class CsvFile
         $this->csvControl = $csvControl;
     }
 
-    public function setInvalidLineHandler(callable $handler = null): void
-    {
-        $this->invalidLineHandler = $handler;
-    }
-
-    public function setDataTransformer(callable $transformer = null): void
-    {
-        $this->dataTransformer = $transformer;
-    }
-
-    /**
-     * @param InvalidCsvLineException $e
-     * @throws InvalidCsvLineException
-     */
-    private function handleInvalidLineException(InvalidCsvLineException $e): void
-    {
-        if (\is_callable($this->invalidLineHandler)) {
-            \call_user_func($this->invalidLineHandler, $e);
-        } else {
-            throw $e;
-        }
-    }
-
-    /**
-     * @param array $data
-     * @param int $lineNumber
-     * @return array|mixed
-     * @throws InvalidCsvLineException
-     */
-    private function transformData(array $data, int $lineNumber)
-    {
-        if (\is_callable($this->dataTransformer)) {
-            try {
-                return \call_user_func($this->dataTransformer, $data, $lineNumber);
-            }
-            catch (\Exception $e) {
-                throw new InvalidCsvLineException($e->getMessage(), $data, $lineNumber);
-            }
-        }
-
-        return $data;
-    }
-
     /**
      * @return int
-     * @throws \RuntimeException
-     * @throws \LogicException
      */
-    public function count(): int
+    public function countLines(): int
     {
-        // not the most efficient way, but we need to have the same result as getData()
-        $file = $this->openFile();
         $count = 0;
+        $file = $this->openFile();
         while (!$file->eof()) {
-            $data = $file->fgetcsv();
-            if (!\is_array($data)) {
-                continue; // skip empty lines or last enter
-            }
-
             ++$count;
+            $file->fgetcsv();
         }
 
-        $file = null; // close file
-
-        return $this->firstLineHeader ? $count - 1 : $count;
+        return $count;
     }
 
     /**
-     * @return iterable
-     * @throws InvalidCsvHeaderException
-     * @throws InvalidCsvLineException
+     * @return iterable|CsvLineInterface[]
      */
-    public function getData(): iterable
+    public function readLines(): iterable
     {
         $file = $this->openFile();
-
-        $dataProxy = null;
-        if ($this->firstLineHeader) {
-            $header = $file->fgetcsv();
-            if (!\is_array($header)) {
-                throw new InvalidCsvHeaderException('Invalid header of the file');
-            }
-            $dataProxy = new MatchDataWithHeader($header);
-        }
 
         $lineNumber = 0;
-        while (!$file->eof()) {
-            $data = $file->fgetcsv();
-            if (!\is_array($data)) {
-                continue; // skip empty lines or last enter
-            }
+        $dataProxy = null;
+        if ($this->firstLineHeader) {
+            ++$lineNumber;
+            $header = $file->fgetcsv();
 
-            try {
-                yield new CsvLine(
-                    ++$lineNumber,
-                    $this->transformData(
-                        $dataProxy ? $dataProxy->match($data, $lineNumber) : $data,
-                        $lineNumber
-                    )
-                );
-            }
-            catch (InvalidCsvLineException $e) {
-                $this->handleInvalidLineException($e);
-            }
+            Assert::isArray($header);
+            $dataProxy = new MatchDataWithHeader((array) $header); // make phpstan happy
+        }
+
+        while (!$file->eof()) {
+            ++$lineNumber;
+            $data = (array) $file->fgetcsv();
+
+            yield new CsvLine(
+                $lineNumber,
+                $dataProxy ? $dataProxy->match($data, $lineNumber) : $data
+            );
         }
 
         $file = null; // close file
     }
 
     /**
-     * @return FileObject
      * @throws \RuntimeException
      * @throws \LogicException
+     *
+     * @return FileObject
      */
     private function openFile(): FileObject
     {
         $file = new FileObject($this->filePath, 'r');
-        $file->setFlags(FileObject::READ_CSV | FileObject::READ_AHEAD | FileObject::SKIP_EMPTY | FileObject::DROP_NEW_LINE);
+        $file->setFlags(FileObject::READ_CSV | FileObject::READ_AHEAD | FileObject::DROP_NEW_LINE);
         if ($this->csvControl instanceof CsvControl) {
             $file->setCsvControl(
                 $this->csvControl->getDelimiter(),
