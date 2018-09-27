@@ -18,6 +18,14 @@ John
 Jan,Kowalski
 CSV;
 
+    private $csvWithInvalidLines = <<<CSV
+name,surname
+John,Smith
+John
+Jan,Kowalski
+Jan,Kowalski,extra
+CSV;
+
     public function testCsvFileReader(): void
     {
         $file = new CsvFile('data://text/plain,'.\urlencode($this->csv));
@@ -40,12 +48,14 @@ CSV;
         $reader->errors()->subscribe($errorsObserver);
         $reader->stream()->subscribe($streamObserver);
 
+        $this->assertSame(4, $file->countLines());
+
         $reader->loop();
     }
 
     public function testCsvFileReader_WithDataTransformer(): void
     {
-        $file = new CsvFile('data://text/plain,'.\urlencode($this->csv));
+        $file = new CsvFile('data://text/plain,'.\urlencode($this->csvWithInvalidLines));
         $reader = new CsvFileReader($file, function (array $data) {
             if (\in_array(null, \array_values($data), true)) {
                 throw new \InvalidArgumentException('Data contains null');
@@ -61,10 +71,10 @@ CSV;
         $dataObserver->expects($this->exactly(2))->method('__invoke');
 
         $errorsObserver = $this->getMockBuilder(\stdClass::class)->setMethods(['__invoke'])->getMock();
-        $errorsObserver->expects($this->once())->method('__invoke')->with($this->isInstanceOf(InvalidCsvLineException::class));
+        $errorsObserver->expects($this->exactly(2))->method('__invoke')->with($this->isInstanceOf(InvalidCsvLineException::class));
 
         $streamObserver = $this->getMockBuilder(\stdClass::class)->setMethods(['__invoke'])->getMock();
-        $streamObserver->expects($this->exactly(3))->method('__invoke');
+        $streamObserver->expects($this->exactly(4))->method('__invoke');
 
         $reader->lines()->subscribe($linesObserver);
         $reader->data()->subscribe($dataObserver);
@@ -72,5 +82,17 @@ CSV;
         $reader->stream()->subscribe($streamObserver);
 
         $reader->loop();
+
+        $this->assertSame(5, $file->countLines());
+    }
+
+    public function testCsvFileReaderConstructor_HasInvalidLineHandler(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('CsvFile already has invalid line handler');
+
+        $file = new CsvFile('data://text/plain,'.\urlencode($this->csv));
+        $file->setInvalidLineHandler(function (): void {});
+        new CsvFileReader($file);
     }
 }
