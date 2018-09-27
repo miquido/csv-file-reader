@@ -89,6 +89,4 @@ CSV;
         $this->expectExceptionMessage('Data row has more data than a header (4 in a data, 3 in a header), line number: 2');
         \iterator_to_array($file->readLines());
     }
-
-
 }

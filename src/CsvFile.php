@@ -52,6 +52,7 @@ final class CsvFile
 
     /**
      * @param InvalidCsvLineException $e
+     *
      * @throws InvalidCsvLineException
      */
     private function handleInvalidLineException(InvalidCsvLineException $e): void
@@ -78,8 +79,9 @@ final class CsvFile
     }
 
     /**
-     * @return iterable|CsvLineInterface[]
      * @throws InvalidCsvLineException
+     *
+     * @return iterable|CsvLineInterface[]
      */
     public function readLines(): iterable
     {
@@ -104,8 +106,7 @@ final class CsvFile
                     $lineNumber,
                     $dataProxy ? $dataProxy->match($data, $lineNumber) : $data
                 );
-            }
-            catch (InvalidCsvLineException $e) {
+            } catch (InvalidCsvLineException $e) {
                 $this->handleInvalidLineException($e);
             }
         }
