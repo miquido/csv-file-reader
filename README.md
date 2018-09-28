@@ -139,6 +139,8 @@ $reader->lines()->pipe(new Operator\BufferCount($batchSize))->subscribe(function
 $reader->loop(); // start reading a file
 ```
 
+See [*miquido/observable*](https://github.com/miquido/observable) library for more operators.
+
 ## Contributing
 
 Pull requests, bug fixes and issue reports are welcome.
