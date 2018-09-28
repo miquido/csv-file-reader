@@ -1,4 +1,4 @@
-[![Build](https://travis-ci.org/miquido/csv-file-reader.svg?branch=master)](https://travis-ci.org/miquido/observable)
+[![Build](https://travis-ci.org/miquido/csv-file-reader.svg?branch=master)](https://travis-ci.org/miquido/csv-file-reader)
 [![Maintainability](https://api.codeclimate.com/v1/badges/d7b1addb4a14eab9cb48/maintainability)](https://codeclimate.com/github/miquido/csv-file-reader/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/d7b1addb4a14eab9cb48/test_coverage)](https://codeclimate.com/github/miquido/csv-file-reader/test_coverage)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
