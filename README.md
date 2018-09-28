@@ -5,8 +5,6 @@
 
 # CSV File Reader
 
-Set of classes for data streams.
-
 - [Installation guide](#installation)
 - [Code Samples](#code-samples)
 - [Contributing](#contributing)
