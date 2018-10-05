@@ -2,6 +2,7 @@
     "name": "miquido/csv-file-reader",
     "type": "library",
     "description": "CSV Reader library",
+    "version": "v1.0.0-rc1",
     "keywords": [
         "PHP",
         "csv"
